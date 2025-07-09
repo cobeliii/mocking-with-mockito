@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 
@@ -20,6 +21,8 @@ class OrderServiceTest {
 
     @Mock
     private PaymentProcessor paymentProcessor;
+    @Mock
+    private OrderRepository orderRepository;
 
     @InjectMocks
     private OrderService underTest;
@@ -30,13 +33,26 @@ class OrderServiceTest {
         //given
         BigDecimal amount = BigDecimal.TEN;
         when(paymentProcessor.charge(amount)).thenReturn(true);
+        when(orderRepository.save(any())).thenReturn(1);
         //when
-        boolean actual = underTest.processOrder(amount);
+        boolean actual = underTest.processOrder(null ,amount);
 
         //Assert
         verify(paymentProcessor).charge(amount);
         assertThat(actual).isTrue();
     }
 
-
+    @Test
+    void itShouldThrowWhenChargeFails() {
+        //given
+        BigDecimal amount = BigDecimal.TEN;
+        when(paymentProcessor.charge(amount)).thenReturn(false);
+        //when
+        assertThatThrownBy(() -> underTest.processOrder(null ,amount))
+                .hasMessageContaining("Payment not processed")
+                .isInstanceOf(IllegalStateException.class);
+        //Assert
+        verify(paymentProcessor).charge(amount);
+        verifyNoInteractions(orderRepository);
+    }
 }
