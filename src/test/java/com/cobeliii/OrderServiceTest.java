@@ -12,6 +12,8 @@ import java.time.ZonedDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.*;
 
 
@@ -87,5 +89,20 @@ class OrderServiceTest {
         //Assert
         verify(paymentProcessor).charge(amount);
         verifyNoInteractions(orderRepository);
+    }
+
+    @Test
+    void itShouldThrowWhenChargeFailsWithMockitoBDD() {
+        //given
+        BigDecimal amount = BigDecimal.TEN;
+        given(paymentProcessor.charge(amount)).willReturn(false);
+        //when
+        assertThatThrownBy(() -> underTest.processOrder(null ,amount))
+                .hasMessageContaining("Payment not processed")
+                .isInstanceOf(IllegalStateException.class);
+        //Assert
+        then(paymentProcessor).should().charge(amount);
+        then(orderRepository).shouldHaveNoInteractions();
+
     }
 }

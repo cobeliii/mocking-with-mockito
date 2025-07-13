@@ -78,7 +78,7 @@ public class AppTest {
         String actual = mockList.get(0);
 
         //Assert
-        verify(mockList).get(0);
+        //verify(mockList).get(0);
         then(mockList).should().get(0);
         assertThat(actual).isEqualTo("hello");
     }
